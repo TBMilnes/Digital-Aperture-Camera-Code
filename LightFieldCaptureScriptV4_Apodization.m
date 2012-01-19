@@ -57,13 +57,10 @@ end
 backgroundLight = backgroundLight/ii;
 figure; imshow(uint8(backgroundLight));
 
-% Raw calibration
-xMin = 129; xMax = 896;
-yMin = 1; yMax = 768;%<--For square-grid apertures %yMin = 1; yMax = 768;
+% Light field boundaries
+xMin = 129; xMax = 896; xMean = (xMin+xMax)/2;
+yMin = 1; yMax = 768; yMean = (yMin+yMax)/2;
 xRange = xMax - xMin + 1; yRange = yMax - yMin + 1;
-% Padding re-map
-xMin = xMin + round(padding*xRange); xMax = xMax - round(padding*xRange);
-yMin = yMin + round(padding*yRange); yMax = yMax - round(padding*yRange);
 xRange = xMax - xMin + 1; yRange = yMax - yMin + 1;
 
 % Step through light field blocks
@@ -71,11 +68,8 @@ for jj = 1:LFHeight
     for ii = 1:LFWidth
         disp(sprintf('Light Field Position: %i,%i',jj,ii));
         % Open new aperture
-        apertureImage(:,:) = 0;
-        apertureImage(yMin+round((jj-1)/LFHeight*yRange): ...
-            yMin+round(jj/LFHeight*yRange), ...
-            xMin+round((ii-1)/LFWidth*xRange): ...
-            xMin+round(ii/LFWidth*xRange)) = 255;
+        apertureImage = uint8(customgauss([768,1024],40,40,0,0,255,...
+            [yMin-1+(jj-0.5)/LFHeight*yRange-yMean,xMin-1+(ii-0.5)/LFWidth*xRange-xMean]));
         figure(apertureImageFigureHandle); imshow(apertureImage);
         imwrite(apertureImage,'apertureImage.bmp')
         system('"c:\Program Files\IrfanView\i_view32" apertureImage.bmp /one /pos=(2390,1) /fs &');%(1366,1)
